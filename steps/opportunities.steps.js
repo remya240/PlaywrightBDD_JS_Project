@@ -1,0 +1,263 @@
+import { createBdd } from "playwright-bdd";
+import { expect } from "@playwright/test";
+import { test } from "../fixtures/fixtures.js";
+import { logger } from "../utils/logger.js";
+
+const { Given, When, Then } = createBdd(test);
+
+When("User hovers over Opportunities", async ({ opportunitiesPage }) => {
+  logger.info("Hovering over Opportunities menu");
+
+  await opportunitiesPage.hoverOpportunitiesMenu();
+  logger.info("Hovered over Opportunities menu successfully");
+});
+
+Then(
+  "User should see the Opportunities dropdown menu",
+  async ({ opportunitiesPage }) => {
+    await expect(await opportunitiesPage.isDropdownMenuVisible()).toBe(true);
+    logger.info("Opportunities dropdown menu is visible");
+  },
+);
+
+When("User clicks Create Opportunity", async ({ opportunitiesPage }) => {
+  await opportunitiesPage.clickCreateOpportunity();
+  logger.info("Create Opportunity clicked successfully");
+});
+
+Then(
+  "User should be redirected to the Create Opportunity page",
+  async ({ opportunitiesPage }) => {
+    await expect(opportunitiesPage.page).toHaveURL(
+      "https://suite8demo.suiteondemand.com/#/opportunities/edit?return_module=Opportunities&return_action=DetailView",
+    );
+    logger.info("Create Opportunity page is displayed successfully");
+  },
+);
+
+Given(
+  "User is on the Create Opportunity page",
+  async ({ opportunitiesPage }) => {
+    await opportunitiesPage.clickCreateOpportunity();
+    logger.info("Create Opportunity page opened");
+  },
+);
+
+When(
+  "User views the Create Opportunity page",
+  async ({ opportunitiesPage }) => {
+    await expect(opportunitiesPage.page).toHaveURL(
+      "https://suite8demo.suiteondemand.com/#/opportunities/edit?return_module=Opportunities&return_action=DetailView",
+    );
+    logger.info("Create Opportunity page URL verified successfully");
+  },
+);
+Then(
+  "User should see a mandatory indicator next to {string}",
+  async ({ opportunitiesPage }, arg) => {
+    const label = await opportunitiesPage.getMandatoryFieldLabel(arg);
+    await expect(label).toContainText("*");
+    logger.info(`Mandatory indicator verified for field: ${arg}`);
+  },
+);
+When(
+  "User enters all mandatory fields and clicks Save",
+  async ({ opportunitiesPage, excelReader }) => {
+    const opportunitiesData = excelReader.getExcelData(
+      "opportunities",
+      "Create Opportunity",
+    );
+
+    await opportunitiesPage.fillAllMandatoryFieldsAndSave({
+      opportunityName: opportunitiesData.OpportunityName,
+      accountName: opportunitiesData.AccountName,
+      opportunityAmount: String(opportunitiesData.OpportunityAmount),
+      salesStage: opportunitiesData.SalesStage,
+      closeDate: opportunitiesData.ExpectedCloseDate,
+    });
+    logger.info("Mandatory fields entered and Save clicked successfully");
+  },
+);
+
+Then(
+  "User should see the created Opportunity",
+  async ({ opportunitiesPage, excelReader }) => {
+    const opportunitiesData = excelReader.getExcelData(
+      "opportunities",
+      "Create Opportunity",
+    );
+
+    await expect(
+      opportunitiesPage.opportunityTitle(opportunitiesData.OpportunityName),
+    ).toHaveText(opportunitiesData.OpportunityName);
+  },
+);
+When(
+  "User leaves {string} blank and clicks Save",
+  async ({ opportunitiesPage, excelReader }, arg) => {
+    const opportunitiesData = excelReader.getExcelData(
+      "opportunities",
+      "BlankMandatoryfield",
+    );
+
+    const data = {
+      opportunityName: opportunitiesData.OpportunityName,
+      accountName: opportunitiesData.AccountName,
+      opportunityAmount: String(opportunitiesData.OpportunityAmount),
+      salesStage: opportunitiesData.SalesStage,
+      closeDate: opportunitiesData.ExpectedCloseDate,
+    };
+
+    const fieldMap = {
+      "Opportunity Name": "opportunityName",
+      "Account Name": "accountName",
+      "Sales Stage": "salesStage",
+      "Expected Close Date": "closeDate",
+    };
+
+    data[fieldMap[arg]] = "";
+
+    await opportunitiesPage.fillAllMandatoryFieldsAndSave(data);
+  },
+);
+
+Then(
+  "User should see a required-field validation message for {string}",
+  async ({ opportunitiesPage }, arg) => {
+    await expect(opportunitiesPage.ValidationMessage).toBeVisible();
+  },
+);
+When(
+  "User enters a non-numeric value in Opportunity Amount and clicks Save",
+  async ({ opportunitiesPage, excelReader }) => {
+    const opportunitiesData = excelReader.getExcelData(
+      "opportunities",
+      "InvalidAmount",
+    );
+    await opportunitiesPage.fillAllMandatoryFieldsAndSave(
+      opportunitiesData.OpportunityName,
+      opportunitiesData.AccountName,
+      String(opportunitiesData.OpportunityAmount),
+      opportunitiesData.SalesStage,
+      opportunitiesData.ExpectedCloseDate,
+    );
+  },
+);
+
+Then(
+  "User should see an invalid-format validation message",
+  async ({ opportunitiesPage }) => {
+    await expect(opportunitiesPage.ValidationMessage).toBeVisible();
+    await expect(opportunitiesPage.invalidFormatMessage).toBeVisible();
+  },
+);
+When(
+  "User selects a date using the calendar icon next to {string}",
+  async ({ opportunitiesPage, excelReader }, arg) => {
+    const data = excelReader.getExcelData("opportunities", "ExpectedCloseDate");
+    await opportunitiesPage.selectDateFromCalendar(data.ExpectedCloseDate);
+  },
+);
+
+Then(
+  "The selected date should populate the field in yyyy-mm-dd format",
+  async ({ opportunitiesPage, excelReader }) => {
+    const data = excelReader.getExcelData("opportunities", "ExpectedCloseDate");
+    await expect(opportunitiesPage.expectedCloseDateInput).toHaveValue(
+      data.ExpectedCloseDate,
+    );
+    logger.info("Selected date verified successfully");
+  },
+);
+
+When(
+  "User clicks the dropdown arrow next to {string} and enters a partial account name",
+  async ({ opportunitiesPage, excelReader }, arg) => {
+    const data = excelReader.getExcelData("opportunities", "AccountSearch");
+
+    await opportunitiesPage.searchAccount(data.AccountName);
+    logger.info("Partial account name entered successfully");
+  },
+);
+
+Then(
+  "User should see matching accounts displayed",
+  async ({ opportunitiesPage }) => {
+    const matchingAccounts = await opportunitiesPage.getMatchingAccounts();
+
+    await expect(matchingAccounts.first()).toBeVisible();
+    logger.info("Matching accounts displayed successfully");
+  },
+);
+
+When("User clicks View Opportunities", async ({ opportunitiesPage }) => {
+  await opportunitiesPage.viewOpportunitiesClick();
+  logger.info("View Opportunities clicked");
+});
+
+Then(
+  "User should be redirected to the Opportunities page",
+  async ({ opportunitiesPage }) => {
+    await expect(await opportunitiesPage.viewOpportunitiesTitle).toBeVisible();
+    logger.info("Redirected to Opportunities page");
+  },
+);
+Given("User is on the Opportunities page", async ({ opportunitiesPage }) => {
+  await opportunitiesPage.viewOpportunitiesClick();
+  await expect(opportunitiesPage.viewOpportunitiesTitle).toBeVisible();
+
+  logger.info("User is on the Opportunities page");
+});
+
+When("User views the Opportunities page", async ({ opportunitiesPage }) => {
+  await expect(opportunitiesPage.viewOpportunitiesTitle).toBeVisible();
+  logger.info("User views the Opportunities page");
+});
+Then(
+  "User should see the expected columns displayed",
+  async ({ opportunitiesPage }) => {
+    Then(
+      "User should see the expected columns displayed",
+      async ({ opportunitiesPage }) => {
+        await expect(opportunitiesPage.nameColumn).toBeVisible();
+
+        await expect(opportunitiesPage.accountNameColumn).toBeVisible();
+
+        await expect(opportunitiesPage.salesStageColumn).toBeVisible();
+
+        await expect(opportunitiesPage.amountColumn).toBeVisible();
+
+        await expect(opportunitiesPage.closeColumn).toBeVisible();
+
+        await expect(opportunitiesPage.userColumn).toBeVisible();
+
+        await expect(opportunitiesPage.dateCreatedColumn).toBeVisible();
+
+        logger.info("All Opportunities columns are visible");
+      },
+    );
+  },
+);
+When('User clicks {string}', async ({opportunitiesPage}, arg) => {
+  await opportunitiesPage.hoverOpportunitiesMenu();
+  await opportunitiesPage.importOppotunities.click();
+
+});
+
+Then('User should see the Import Opportunities page displayed with {string}', async ({opportunitiesPage}, arg) => {
+  await expect(opportunitiesPage.importStep1Heading).toBeVisible();
+});
+Given('user is on the Import Opportunities page', async ({opportunitiesPage}) => {
+    await opportunitiesPage.hoverOpportunitiesMenu();
+  await opportunitiesPage.clickImportOpportunities();5
+});
+
+When('user selects the file and clicks on Next', async ({opportunitiesPage}) => {
+    await opportunitiesPage.uploadImportFileAndClickNext("importtest.csv");
+
+});
+
+Then('user should be navigated to {string}', async ({opportunitiesPage}, arg) => {
+  await expect(opportunitiesPage.importStep2Heading).toBeVisible();
+
+});
