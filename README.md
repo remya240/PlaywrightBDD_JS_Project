@@ -1,38 +1,45 @@
 # Playwright BDD Automation Framework
 
 ## Overview
-This project is a web UI automation framework built using Playwright, JavaScript, and Cucumber BDD. It uses readable feature files, reusable page objects, and Excel-based test data to support maintainable and scalable automation.
+
+This project is a web UI automation framework built using Playwright, JavaScript, and Cucumber BDD. It uses readable feature files, reusable step definitions, the Page Object Model (POM), and Excel-based test data to support maintainable and scalable test automation.
 
 ## Tech Stack
+
 - **Playwright** – Browser automation
 - **JavaScript** – Programming language
-- **Cucumber BDD** – Behavior-driven testing
-- **Excel** – Test data management
-- **GitHub Actions** – CI/CD workflow
+- **Cucumber BDD** – Behavior-driven development
+- **Excel and CSV** – Test data management
+- **GitHub Actions** – Continuous integration and automated test execution
 
 ## Project Structure
 
 ```text
-PalywrightBDD_JS/
-├── .github/workflows/   # CI workflow configuration
-├── features/            # BDD feature files
-├── fixtures/            # Test fixtures
-├── import/              # Import test data
+PlaywrightBDD_JS_Project/
+├── .github/
+│   └── workflows/       # GitHub Actions workflow
+├── features/            # Cucumber feature files
+├── fixtures/            # Reusable test fixtures
+├── import/              # Import-related test data
 ├── pages/               # Page Object Model classes
 ├── setup/               # Authentication setup
-├── steps/               # Step definitions
-├── testData/            # Excel test data
-├── utils/               # Reusable utilities
+├── steps/               # Cucumber step definitions
+├── testData/            # Excel and CSV test data
+├── utils/               # Reusable utility classes
 ├── cucumber.js          # Cucumber configuration
-├── playwright.config.js  # Playwright configuration
-└── package.json         # Dependencies and scripts
+├── playwright.config.js # Playwright configuration
+├── package.json         # Dependencies and npm scripts
+├── package-lock.json    # Locked dependency versions
+└── README.md            # Project documentation
 ```
 
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js and npm
 - Git
+- Visual Studio Code or another code editor
 
 ### Installation
 
@@ -41,10 +48,10 @@ Clone the repository and navigate to the project directory:
 ```bash
 git clone https://github.com/remya240/PlaywrightBDD_JS_Project.git
 cd PlaywrightBDD_JS_Project
-npm install
+npm ci
 ```
 
-Install the required Playwright browsers if needed:
+Install the required Playwright browsers:
 
 ```bash
 npx playwright install
@@ -52,23 +59,33 @@ npx playwright install
 
 ## Running Tests
 
-Check `package.json` for the available test scripts. Run the appropriate script, for example:
+Check `package.json` for the available npm scripts and use the appropriate command to execute the tests.
+
+For example:
 
 ```bash
 npm test
 ```
 
-If no `test` script is configured, use the command defined for your Cucumber and Playwright BDD setup.
+If the `test` script is not configured, run the Cucumber command specified in your project configuration.
 
 ## Test Data
-Test data is maintained in Excel and CSV files to reduce hard-coded values and make test scenarios easier to maintain.
 
-## Reporting
-The framework can be configured to generate test execution reports. Refer to the project configuration for the available reporting commands.
+Test data is maintained in Excel and CSV files to reduce hard-coded values and improve test maintainability.
+
+## Reporting and Logging
+
+Refer to the project configuration and available npm scripts for test reports and execution logs.
 
 ## CI/CD
-A GitHub Actions workflow is included under `.github/workflows/` for running automation through CI.
 
-## Notes
-- Keep credentials and authentication tokens out of source control.
-- Configure environment variables and authentication state before running tests, as required by the project.
+GitHub Actions configuration is maintained under `.github/workflows/`. The workflow can install dependencies, execute configured tests, and upload test reports.
+
+## Best Practices
+
+- Keep credentials, passwords, and authentication tokens out of source control.
+- Store sensitive configuration in environment variables.
+- Exclude `.env` files and authentication state from Git.
+- Use reusable page objects and step definitions.
+- Keep feature files readable and focused on business behavior.
+- Use external test data to minimize hard-coded values.
